@@ -174,10 +174,49 @@ const createViolin = (data) => {
         .attr('stroke', 'none')
         .attr('d', womenGenerator(womenBins));
     svg.append('text')
-       .text("Earnings of the top tennis players in 2019 (USD)")
-       .attr('font-size','16px')
-       .attr('font-weight', 700)
-       .attr('x',margin.left)
-       .attr('y',20);
+        .text("Earnings of the top tennis players in 2019 (USD)")
+        .attr('font-size', '16px')
+        .attr('font-weight', 700)
+        .attr('x', margin.left)
+        .attr('y', 20);
 
+    const circlesRadius = 2.5;
+    const circlesPadding = 0.7;
+    const simulation = d3.forceSimulation(data)
+        .force('forceX', d3.forceX(xScale(0))
+            .strength(0.1))
+        .force('forceY', d3.forceY(d => yScale(d.earnings_USD_2019))
+            .strength(10))
+        .force('collide', d3.forceCollide(circlesRadius + circlesPadding))
+        .force('axis', () => {
+
+            // Loop through each data point
+            data.forEach(d => {
+
+                // If man and the circle's x position is on the left side of the violin
+                if (d.gender === 'men' && d.x < xScale(0) + circlesRadius) {
+                    // Increase velocity toward the right
+                    d.vx += 0.004 * d.x;
+                }
+
+                // If woman and the circle's x position is on the right side of the violin
+                if (d.gender === 'women' && d.x > xScale(0)- circlesRadius) {
+                    // Increase velocity toward the left
+                    d.vx -= 0.004 * d.x;
+                }
+            })
+        })
+        .stop()
+        .tick(300);
+    console.log(data);
+    svg.append('g')
+        .selectAll('circle')
+        .data(data)
+        .join('circle')
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y)
+        .attr('r', circlesRadius)
+        .attr('fill', d => d.gender == 'women' ? '#718233' : '#BF9B30')
+        .attr('stroke', d => d.gender == 'women' ? '#718233' : '#BF9B30')
+        .attr('fill-opacity', 0.6);
 };
